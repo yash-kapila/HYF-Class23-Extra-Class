@@ -177,3 +177,42 @@ Promise.race([promise1, promise2, promise3])
     console.log(`Rejected ${err}`);
   });
 ```
+
+### Promise chaining
+
+As mentioned above, the `then` and `catch` handlers themselves return a _new_ promise, it provides us with an option to chain these handlers. This would have otherwise been done though the concept which you might have heard already named **callback hell**.
+
+Example:
+
+```javascript
+// For the sake of example, keeping this promise very easy
+const promise = new Promise(resolve => {
+  resolve(10);  // resolving a promise with value 10
+});
+
+promise
+  .then(data => {
+    console.log(`First handler ${data}`);
+    return data * 10; // here then handler will create a new promise and automatically resolve it using value data * 10
+  })
+  .then(data => {
+    console.log(`Second handler ${data}`);
+     // here then handler will create a new promise and automatically resolve it using value undefined
+  })
+  .then(data => {
+    console.log(`Third handler ${data}`);
+    return new Promise((resolve, reject) => {
+      reject(30);
+    });
+  })
+  .then(data => {
+    console.log('Am I called?');
+  })
+  .catch(err => {
+    console.log(`Catching error ${err}`);
+  })
+  .then(data => {
+    console.log('What? Another then?');
+    // and so on
+  });
+```
