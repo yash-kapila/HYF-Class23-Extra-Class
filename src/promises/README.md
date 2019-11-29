@@ -1,143 +1,179 @@
 # Promises
 
-NodeJS is an asynchronous event driven **JavaScript runtime** which is built on Chrome's V8 engine. ExpressJS is a framework which helps in building Node applications in an easier and faster way.
+Promises in JavaScript work quite similar to promises in real world. So first let us look at promises in real life. The definition of a promise from the dictionary is as follows
 
-There are different kinds of applications we can develop using Node/Express combination such as:
+**noun**: a declaration or assurance that one will do something or that a particular thing will happen.
 
-- A Node app serving server-side rendered HTML pages
-- A Node app providing REST APIs(consumer can then be a web app or mobile app)
-- A Node app serving static website(HTML + CSS + JS files)
+So what happens next whem somebody makes a promise to me?
 
-Web servers can be easily spawned in Node capable of serving individually either of the three above mentioned applications or in a combination of them. What it means is that a web server can easily serve static content along with exposing APIs to exchange data with client.
+1. It's not important for me to know if they are going to get the thing done themselves or through someone else. It is not important.
 
-A good example of such an app(we don't know if it is written in NodeJS but the idea is the same) is what we currently use in React homework - https://uinames.com/. The website serves static content(HTML + CSS + JavaScript) when opened in browser but is also capable of serving information through its APIs i.e https://uinames.com/api/?ext&amount=25&region=india&gender=random&source=uinames.com
+2. At the time of making a promise, all we have is only an assurance. We won't be able to act on it immediately. We can decide and formulate what needs to be done when the promise is kept(and hence we have expected outcome) or broken(we know the reason and hence we can plan a contingency).
 
-Have a look inside the **multi-purpose-app** to see how we can implement a similar app using Node/ExpressJS. Execute `npm run multi-purpose-app` in root directory to spawn the web server.
+3. The promise can be either kept or broken by them.
 
-**Note:** Although possible to combine different apps in one, following the principle of separation of concerns, it is better to keep apps serving static content and those serving APIs separate.
+4. When a promise is kept you expect something out of that promise. You can make use of the output of a promise for your further actions or plans.
 
-**References:**
+5. When the other person breaks the promise, we would like to know why they were not able to keep up their side of the bargain to decide our future course of action.
 
-- https://expressjs.com/en/starter/static-files.html
-- https://stackabuse.com/node-js-express-examples-rendered-rest-and-static-websites/
+6. There is a minute chance that we may never hear back from the person at all. In such cases you would prefer to keep a time threshold and take some action afterwards.
 
-## Application Programming Interface(API)
+## Promises in JavaScript
 
-An API as the name suggests is an interface which we can connect/use to in order to establish a connection between our application and the system/application/library serving us those APIs.
+Promises in JavaScript work quite similar to promises in real world. JavaScript being single-threaded is capable to do only one thing at a time. Thus, several features exist in JavaScript world which allow us to perform multiple operations at the same time. We are all aware of _callbacks_ and have been using them since JavaScript2. _Promises_ are also one of the features which allow us to do multiple things at the same time.
 
-We have been dealing with interfaces ever since we had a computer. For example, we use a Graphical User Interface(GUI) to interact with different applications or operating system running on our computer. Similarly, we make use of a Command Line Interface(CLI) to interact with the OS's file system or a Git application when working on a repository. An API, however, is a software-to-software interface and not a user interface. This means that with APIs, applications talk to each other without any user knowledge or intervention.
+Technically, a promise can be in any of the following states at a certain point of time:
 
-### Examples
+- **pending** - Promise is still waiting to be either fulfilled or rejected
+- **fulfilled** - Promise succeeded
+- **rejected** - Promise failed
 
-Example1: Plain JavaScript modules interacting with each other using APIs
+There are two parts to understand while dealing with promises i.e
 
-```JavaScript
-// utils.js
-const utils = () => ({
-  /* sum and multiply are APIs exposed by utils library */
-  sum: (...params) => params.reduce((elem, acc) => elem + acc, 0),
-  multiply: (...params) => params.reduce((elem, acc) => elem * acc, 1);
-});
+1. Creating promises
+2. Handling promises
 
-export default utils;
+### Creating promises
 
+Promises in JavaScript are created using the `Promise` [constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) function.
 
-// app.js
-import utils from 'utils';
+The constructor function accepts a function named as _executor_. This function accepts two parameters named _resolve_ and _reject_(they are functions themselves). It's the executor function's responsibility to initiate the asynchronous operation and once completed, invoke _resolve_ or _reject_ functions based on its result. The return value of the executor is ignored.
 
-/* A different program app.js can use APIS exposed by utils */
-const main = () => {
-  console.log(`Summing numbers: ${utils.sum(1,2,3,4)}`);
-  console.log(`Multiplying numbers: ${utils.multiply(1,2,3,4)}`);
+Example:
+
+```javascript
+/* It fulfills a promise if random number generated is greater than 5; otherwise rejects it */
+const executor = (resolve, reject) => {
+  setTimeout(() => {
+    const random = Math.floor(Math.random() * 10);
+
+    if (random > 5) {
+      resolve(`Resolved with ${random}`);
+    } else {
+      reject(`Rejected with ${random}`);
+    }
+  }, 3 * 1000);
 };
 
-main();
+// Creating a promise
+const promise = new Promise(executor);
+
+console.log(promise); // what do you expect to be logged here?
 ```
 
-Example2: A Node app exposing an API to be used by another app(could be a web app or mobile app)
+Or
 
-```JavaScript
-const express = require('express');
-const app = express();
+```javascript
+/* Fetch me some data from a URI */
+const executor = (resolve, reject) => {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://some.uri.com/api');
+  xhr.onload = () => resolve(xhr.responseText);
+  xhr.onerror = () => reject(xhr.statusText);
+  xhr.send();
+};
 
-const port = process.env.PORT || 3000;
-
-/* This Node app exposes a single API */
-app.get('/api', (req, res) => {
-  const data = {
-    name: 'Yash Kapila',
-    gender: 'Male',
-    age: 29,
-  };
-  res.status(200).send(data);
-});
-
-/* Spawn a web server */
-app.listen(port, () => {
-  console.log(`Multi-purpose app listening on port ${port}`);
-});
-
-// Spin this server and try accessing http://localhost:3000/api to interact with this endpoint
+// Creating a promise
+const promise = new Promise(executor);
 ```
 
-## Asynchronocity in NodeJS
+### Handling promises
 
-JavaScript as we know is a single threaded language. This means that it can only do one task at a time. While that task being is executed, main thread remains busy. This is in comparison to other languages such as Java which are multi-threaded languages where a task can be subdivided and distributed amongs threads while keeping the main thread free.
+As we saw above, a pending promise can either be fulfilled or rejected. Thus, we ought to have some handlers which can be invoked when either of these options happen. The `Promise` object provides two methods as handlers i.e
 
-Since our main thread is kept busy while executing a task, it is not considered a good practice to execute long operations like reading from a big file, waiting for a server to respond to an API request or even to execute a big loop.
+- Promise.prototype.then()
+- Promise.prototype.catch()
 
-This is where asynchronous programming in JavaScript comes in handy. All tasks which may have a long execution time are executed in parallel off from the main thread. These tasks then communicate with the main thread using **Event loop**.
+We use `then` to handle a fulfilled promise while using `catch` to handle a rejected promise.
 
-Asynchronous programming in both JavaScript runtimes, browsers and NodeJS, works the same way(minor differences would be in how event loop works but the overall concept is same). They both make operations which may take a while to complete asynchronous.
+Important point to remember is that a `then` handler is capable of handling both fulfilled and rejected promises. But it is a good practice to use `catch` for rejected scenarios for a clearer understanding.
 
-This is implemented using various techniques such as:
+Another important point to remember is that both `then` and `catch` handlers return a _promise_ themselves. If it is hard to understand, imagine that the `then` function has been written in such a way that it serves the purpose of both handling a promise first and then creating a new promise afterwards.
 
-- callbacks
-- promises
-- async/await
-- generators
+Example:
 
-Let's have a quick look at an example showing why asynchronous programming is important in NodeJS.
+```javascript
+promise
+  .then((data) => {
+    console.log(data);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+```
 
-**Reference:**
+Or
 
-- https://eloquentjavascript.net/11_async.html
-- https://www.youtube.com/watch?v=8aGhZQkoFbQ
-- https://nodejs.org/en/docs/guides/dont-block-the-event-loop/
+```javascript
+promise
+  .then((data) => {
+    console.log(data);
+  }, (err) => {
+    console.log(err);
+  });
+```
 
-## Environment variables
+There is potentially another method coming in JavaScript promises named _finally_ which will act as a handler always executed regardless of whether the promise was resolved or rejected.
 
-Decoupling configuration from the application.
+### Some extra methods
 
-Environment variables are those whose value is set outside the program, likely through configuration files or provided at runtime while deploying the application. An environment variable is made up of a key=value pair and any number can be created and used within a programn.
+- Promise.all()
+- Promise.race()
 
-For example, at the time of deploying our app in production, we would like to set the environment variable NODE_ENV to __production__ which is going to bring in some additional benefits to our app such as less verbose error messages. Similarly, we may want to connect to different databases for different environments(development, staging, test, or production) and thus we can set different DB endpoints for different environments using environment variables.
+Thing to remember is that they both act as promise **handlers**. While `Promise.all` waits for all promises to be resolved, or for any to be rejected, `Promise.race` waits until any of the promises is resolved or rejected.
 
-We use environment variables in our NodeJS application using __process.env__ object. And these variables can be passed in different ways such as:
+```javascript
+const promise1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('Promise1');
+  }, 100);
+});
 
-- Command Line: `PORT=3000 node server.js` will set environment variable PORT as 3000 which will be then accessible inside our app.
-- **.env** file: We can consolidate all our configurations in an environment file which can be added into root of our app. But we need to make sure that this file is not added to source-control and is kept away using `.gitignore`.
+const promise2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('Promise2');
+  }, 200);
+});
 
-## Middlewares
+const promise3 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('Promise3');
+  }, 300);
+});
 
-Middleware as the name might suggest are functions that lie in the middle of a flowwhen it reaches the server(be it request or response). They are nothing but functions which have access to the request and response object and a __next__ function in the app's cycle. __next__ is again a function which, when invoked, executes the next middleware function registered.
+Promise.all([promise1, promise2, promise3])
+  .then(data => {
+    console.log(data);  // if resolved, data will be an array of resolved items
+  })
+  .catch(err => {
+    console.log(`Rejected ${err}`); // this will NOT be an array
+  });
+```
 
-Some of the basic functions which a middleware function does:
+```javascript
+const promise1 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject('Promise1');
+  }, 100);
+});
 
-- Execute any piece of code
-- Modify request or response object
-- End the request/response cycle
-- Call the next middleware function
+const promise2 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('Promise2');
+  }, 200);
+});
 
-If a middleware function doesn't end the request/response cycle, then it must call the __next__ function to pass control to the next middleware. Otherwise, the request would be left hanging.
+const promise3 = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('Promise3');
+  }, 300);
+});
 
-Common use cases of a midleware function would be:
-
-- **Guard routes:** For protected endpoints i.e for which a user must be authenticated, check whether the incoming request is coming from an authenticated source.
-- **Logging:** We would like to keep a log of all incoming requests.
-- **Error handling:** Middleware functions can be used for a common way of dealing with errors instead of doing it on every route.
-
-**Reference:**
-
-- https://expressjs.com/en/guide/writing-middleware.html
-- https://expressjs.com/en/guide/using-middleware.html
+Promise.race([promise1, promise2, promise3])
+  .then(data => {
+    console.log(data);
+  })
+  .catch(err => {
+    console.log(`Rejected ${err}`);
+  });
+```
